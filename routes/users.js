@@ -7,13 +7,14 @@ const User = require('../models/User');
 
 //Data validate Schemas
 userRegisterValidate = new Joi.object().keys({
-    name:Joi.string().min(5).max(30).required(),
+    fname:Joi.string().min(3).max(30).required(),
+    lname:Joi.string().min(3).max(30).required(),
     username:Joi.string().alphanum().min(5).max(30).required(),
     email:Joi.string().email().required(),
     password:Joi.string().min(5).max(30).required(),
     vKey:Joi.number().required(),
     admin:Joi.number().required(),
-    photoUrl:Joi.string().allow('')
+    photo:Joi.string().allow('')
 });
 
 userLoginValidate = new Joi.object().keys({
@@ -49,7 +50,8 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
     const user = new User({
-        name: req.body.name,
+        fname: req.body.fname,
+        lname: req.body.lname,
         username: req.body.username,
         email: req.body.email,
         password: hashedPassword,
