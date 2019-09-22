@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
     email: {type: String, required: true},
     password: {type: String, required: true},
     vKey: {type: String, required: true},
+    verified: {type: Number, default: 0},
     admin: {type: Number, required: true},
     photoUrl: {type: String, required: false}
 });

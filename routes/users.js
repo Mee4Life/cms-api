@@ -3,6 +3,7 @@ const Joi = require('@hapi/joi');
 const bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
 
+
 const User = require('../models/User');
 
 //Data validate Schemas
@@ -13,8 +14,7 @@ userRegisterValidate = new Joi.object().keys({
     email:Joi.string().email().required(),
     password:Joi.string().min(5).max(30).required(),
     vKey:Joi.number().required(),
-    admin:Joi.number().required(),
-    photo:Joi.string().allow('')
+    admin:Joi.number().required()
 });
 
 userLoginValidate = new Joi.object().keys({
@@ -25,7 +25,28 @@ userLoginValidate = new Joi.object().keys({
 
 
 //Register
-router.post('/register', async (req, res) => {
+router.post('/register',  (req, res) => {
+
+    // profile photo vars : 
+    var hasProfilePhoto = false ;
+    var photoSaved = false ;
+    var fileName = '';
+
+    //check if the user has profile photo:
+    if(req.files){
+        hasProfilePhoto = true;
+        const file = req.files.img;
+        fileName = file.name;
+        // save the photo
+        file.mv('./uploads/userImg/' + fileName, (err)=>{
+            //check if was an error 
+            if(err){
+                res.status(400).json({error:err});
+                return;
+            }
+            photoSaved = true;
+        });
+    }
 
     // to validate the user data:
     const { error } = Joi.validate(req.body, userRegisterValidate);
@@ -49,16 +70,33 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-    const user = new User({
-        fname: req.body.fname,
-        lname: req.body.lname,
-        username: req.body.username,
-        email: req.body.email,
-        password: hashedPassword,
-        vKey: req.body.vKey,
-        admin: req.body.admin,
-        photoUrl: req.body.photoUrl
-    });
+    //user obj: 
+    var user;
+
+    //create the user obj on img founded or not: 
+    if(hasProfilePhoto && photoSaved){
+            user = new User({
+            fname: req.body.fname,
+            lname: req.body.lname,
+            username: req.body.username,
+            email: req.body.email,
+            password: hashedPassword,
+            vKey: req.body.vKey,
+            admin: req.body.admin,
+            photoUrl: './uploads/userImg/'+fileName
+        });
+    }else{
+        user = new User({
+            fname: req.body.fname,
+            lname: req.body.lname,
+            username: req.body.username,
+            email: req.body.email,
+            password: hashedPassword,
+            vKey: req.body.vKey,
+            admin: req.body.admin
+        });
+    }
+
     //save the user to the database 
     try {
         const newUser = await user.save();
