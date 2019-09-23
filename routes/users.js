@@ -25,7 +25,7 @@ userLoginValidate = new Joi.object().keys({
 
 
 //Register
-router.post('/register',  (req, res) => {
+router.post('/register',  async(req, res) => {
 
     // profile photo vars : 
     var hasProfilePhoto = false ;
@@ -38,7 +38,7 @@ router.post('/register',  (req, res) => {
         const file = req.files.img;
         fileName = file.name;
         // save the photo
-        file.mv('./uploads/userImg/' + fileName, (err)=>{
+        await file.mv('./uploads/userImg/' + fileName, (err)=>{
             //check if was an error 
             if(err){
                 res.status(400).json({error:err});
@@ -47,7 +47,7 @@ router.post('/register',  (req, res) => {
             photoSaved = true;
         });
     }
-
+    
     // to validate the user data:
     const { error } = Joi.validate(req.body, userRegisterValidate);
     //check if there an error with the validate:
@@ -83,7 +83,7 @@ router.post('/register',  (req, res) => {
             password: hashedPassword,
             vKey: req.body.vKey,
             admin: req.body.admin,
-            photoUrl: './uploads/userImg/'+fileName
+            photoUrl: fileName
         });
     }else{
         user = new User({

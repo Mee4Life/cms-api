@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema({
     password: {type: String, required: true},
     vKey: {type: String, required: true},
     verified: {type: Number, default: 0},
-    admin: {type: Number, required: true},
+    admin: {type: Number, default: 0},
     photoUrl: {type: String, required: false}
 });
 
