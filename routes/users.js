@@ -13,8 +13,7 @@ userRegisterValidate = new Joi.object().keys({
     username:Joi.string().alphanum().min(5).max(30).required(),
     email:Joi.string().email().required(),
     password:Joi.string().min(5).max(30).required(),
-    vKey:Joi.number().required(),
-    admin:Joi.number().required()
+    vKey:Joi.number().required()
 });
 
 userLoginValidate = new Joi.object().keys({
