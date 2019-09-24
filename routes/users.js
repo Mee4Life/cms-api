@@ -2,6 +2,7 @@ const router = require('express').Router();
 const Joi = require('@hapi/joi');
 const bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
+const tokenValidate = require('../token_validate');
 
 
 const User = require('../models/User');
@@ -17,8 +18,7 @@ userRegisterValidate = new Joi.object().keys({
 });
 
 userLoginValidate = new Joi.object().keys({
-    username:Joi.string().alphanum().min(5).max(30).required(),
-    email:Joi.string().email().required(),
+    usernameOrEmail:Joi.string().min(5).max(30).required(),
     password:Joi.string().min(5).max(30).required()
 });
 
@@ -146,6 +146,48 @@ router.post('/login', async (req, res) => {
     var token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.status(200).json({token: token});
 
+});
+
+//handel vKey post request: http://localhost:3000/users/getVKey
+router.post('/getVKey', tokenValidate, async(req, res)=>{
+    const id = req.user.id;
+    const user = await User.findOne({ _id: id });
+
+    //send the info that php need it
+    res.status(200).json({vKey: user.vKey, email: user.email, fname: user.fname, verified: user.verified });
+});
+
+//handel confirm user request http://localhost:3000/users/confirm
+router.patch('/confirm', tokenValidate, async(req, res) => {
+
+    //check if the request content validation key
+    if(!Number.isInteger(req.body.vKey)){
+        return res.status(400).json({error: 'valid validation key'});
+    }
+
+    const id = req.user.id;
+    const user = await User.findOne({ _id: id });
+    const verified = user.vKey == req.body.vKey;
+
+    if(verified){
+        try {
+            await User.updateOne(
+                {_id: id},
+                {
+                    $set : {
+                        verified: 1,
+                        updatedAt: Date()
+                    }
+                }
+            );
+
+            return res.status(200).json({result: 'user confirmed'});
+        } catch (error) {
+            return res.status(400).json(error);
+        }
+    }else{
+        return res.status(400).json({error: 'valid validation key'});
+    }
 });
 
 module.exports = router;
