@@ -148,15 +148,6 @@ router.post('/login', async (req, res) => {
 
 });
 
-//handel vKey post request: http://localhost:3000/users/getVKey
-router.post('/getVKey', tokenValidate, async(req, res)=>{
-    const id = req.user.id;
-    const user = await User.findOne({ _id: id });
-
-    //send the info that php need it
-    res.status(200).json({vKey: user.vKey, email: user.email, fname: user.fname, verified: user.verified });
-});
-
 //handel confirm user request http://localhost:3000/users/confirm
 router.patch('/confirm', tokenValidate, async(req, res) => {
 
@@ -166,7 +157,7 @@ router.patch('/confirm', tokenValidate, async(req, res) => {
     }
 
     const id = req.user.id;
-    const user = await User.findOne({ _id: id });
+    var user = await User.findOne({ _id: id });
     const verified = user.vKey == req.body.vKey;
 
     if(verified){
@@ -180,14 +171,26 @@ router.patch('/confirm', tokenValidate, async(req, res) => {
                     }
                 }
             );
-
-            return res.status(200).json({result: 'user confirmed'});
+            user = await User.findOne({ _id: id });
+            return res.status(200).json({verified: user.verified});
         } catch (error) {
             return res.status(400).json(error);
         }
     }else{
         return res.status(400).json({error: 'valid validation key'});
     }
+});
+
+//confirmation info get request:
+router.get('/conformation-info', tokenValidate, async(req, res) =>{
+    const id = req.user.id;
+    try {
+        var user = await User.findOne({ _id: id });
+        res.json({verified: user.verified, fname: user.fname, email: user.email});
+    } catch (error) {
+        return res.json({error: "user cant be found"});
+    }
+    
 });
 
 module.exports = router;
