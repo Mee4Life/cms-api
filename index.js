@@ -29,6 +29,12 @@ app.use('/users', usersRoute);
 // get profile images : 
 const userProfileImgRoute = require('./routes/getUserImg');
 app.use('/', userProfileImgRoute);
+//categories:
+const categoryRouter = require('./routes/categories');
+app.use('/categories', categoryRouter);
+//posts:
+const postRouter = require('./routes/posts');
+app.use('/posts', postRouter);
 
 app.listen(3000, () => {
     console.log("Server working on Port: 3000");
