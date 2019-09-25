@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const mongooseTimeStamp = require('mongoose-timestamp');
 
 const categorySchema = new mongoose.Schema({
-    title: {type: String, required: true},
-    des: {type: String, required: true},
-    nestedCategories: {type: Array, required: false},
-    postsCount: {type: Number, required: false},
-    imgUrl: {type: String, required: false},
-    parentId: {type: String, required: false},
+    title: { type: String, required: true },
+    des: { type: String, required: true },
+    nestedCategories: { type: Array, required: false },
+    postsCount: { type: Number, required: false },
+    imgUrl: { type: String, required: false },
+    parentId: { type: String, required: false },
 
 });
 

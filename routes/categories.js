@@ -7,53 +7,53 @@ const Category = require('../models/Category');
 
 //Data validate Schemas 
 insertCategoryVal = new Joi.object().keys({
-    title:Joi.string().min(3).max(60).required(),
-    des:Joi.string().min(5).required(),
-    parentId:Joi.string().alphanum().min(5).allow('')
+    title: Joi.string().min(3).max(60).required(),
+    des: Joi.string().min(5).required(),
+    parentId: Joi.string().alphanum().min(5).allow('')
 });
 
 //get all categories
-router.get('/', async(req, res) =>{
+router.get('/', async (req, res) => {
     try {
         const categories = await Category.find();
         return res.status(200).json(categories);
     } catch (error) {
-        return res.status(400).json({error: 'there is an error when connected to the database'});
+        return res.status(400).json({ error: 'there is an error when connected to the database' });
     }
 });
 
 //add category:
-router.post('/add', tokenValidate, async(req, res) =>{
+router.post('/add', tokenValidate, async (req, res) => {
 
     var hasPhoto = false;
     var fileName = '';
 
-    const {error} = Joi.validate(req.body, insertCategoryVal);
-    if(error){
-        return res.status(400).json({error: error.details[0].message});
+    const { error } = Joi.validate(req.body, insertCategoryVal);
+    if (error) {
+        return res.status(400).json({ error: error.details[0].message });
     }
 
     //check if the request has img inside:
-    if(req.files){
+    if (req.files) {
         hasPhoto = true;
         const file = req.files.img;
         fileName = file.name;
         //check if the dir is exist:
-        if (!fs.existsSync('./uploads/categoriesImg')){
+        if (!fs.existsSync('./uploads/categoriesImg')) {
             await fs.mkdirSync('./uploads/categoriesImg');
         }
         // save the photo
-        await file.mv('./uploads/categoriesImg/' + fileName, (err)=>{
+        await file.mv('./uploads/categoriesImg/' + fileName, (err) => {
             //check if was an error 
-            if(err){
-                return res.status(400).json({error:err});
+            if (err) {
+                return res.status(400).json({ error: err });
             }
         });
     }
 
     var category;
-    if(hasPhoto){
-            category = new Category({
+    if (hasPhoto) {
+        category = new Category({
             title: req.body.title,
             des: req.body.des,
             nestedCategories: {},
@@ -62,7 +62,7 @@ router.post('/add', tokenValidate, async(req, res) =>{
             parentId: req.body.parentId,
 
         });
-    }else{
+    } else {
         category = new Category({
             title: req.body.title,
             des: req.body.des,
@@ -72,12 +72,12 @@ router.post('/add', tokenValidate, async(req, res) =>{
 
         });
     }
-    
+
     try {
         const savedCat = await category.save();
-        return res.status(201).json({id: savedCat._id});
+        return res.status(201).json({ id: savedCat._id });
     } catch (error) {
-        return res.status(400).json({error: error});
+        return res.status(400).json({ error: error });
     }
 });
 

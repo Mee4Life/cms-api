@@ -6,9 +6,9 @@ const upload = require('express-fileupload');
 
 // connect to the database :
 const mongoose = require('mongoose');
-mongoose.set({'useFindAndModify': false});
+mongoose.set({ 'useFindAndModify': false });
 mongoose.connect(process.env.DB_HOST,
-    { 
+    {
         useNewUrlParser: true,
         useUnifiedTopology: true
     });
