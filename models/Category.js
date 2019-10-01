@@ -7,7 +7,7 @@ const categorySchema = new mongoose.Schema({
     nestedCategories: { type: Array, required: false },
     postsCount: { type: Number, required: false },
     imgUrl: { type: String, required: false },
-    parentId: { type: String, required: false },
+    parentId: { type: String, required: false, default: 'root'},
 
 });
 

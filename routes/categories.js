@@ -9,7 +9,7 @@ const Category = require('../models/Category');
 insertCategoryVal = new Joi.object().keys({
     title: Joi.string().min(3).max(60).required(),
     des: Joi.string().min(5).required(),
-    parentId: Joi.string().alphanum().min(5).allow('')
+    parentId: Joi.string().alphanum().min(4).allow('')
 });
 
 //get all categories
@@ -26,6 +26,16 @@ router.get('/', async (req, res) => {
 router.get('/category', async(req, res)=>{
     try {
         const categories = await Category.find({parentId: req.query.id});
+        return res.status(200).json(categories);
+    } catch (error) {
+        return res.status(400).json({ error: error.message });
+    }
+});
+
+//get root categories :
+router.get('/home', async(req, res)=>{
+    try {
+        const categories = await Category.find({parentId: 'root'});
         return res.status(200).json(categories);
     } catch (error) {
         return res.status(400).json({ error: error.message });
