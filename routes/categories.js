@@ -18,7 +18,17 @@ router.get('/', async (req, res) => {
         const categories = await Category.find();
         return res.status(200).json(categories);
     } catch (error) {
-        return res.status(400).json({ error: 'there is an error when connected to the database' });
+        return res.status(400).json({ error: error.message });
+    }
+});
+
+//get categories by category id:
+router.get('/category', async(req, res)=>{
+    try {
+        const categories = await Category.find({parentId: req.query.id});
+        return res.status(200).json(categories);
+    } catch (error) {
+        return res.status(400).json({ error: error.message });
     }
 });
 
