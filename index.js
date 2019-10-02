@@ -38,6 +38,9 @@ app.use('/posts', postRouter);
 //tags:
 const tags = require('./routes/tags');
 app.use('/tags', tags);
+//search:
+const searchRoute = require('./routes/search');
+app.use('/search', searchRoute);
 
 app.listen(3000, () => {
     console.log("Server working on Port: 3000");
