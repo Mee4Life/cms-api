@@ -12,7 +12,8 @@ const PostSchema = new mongoose.Schema({
     comments: { type: Array, required: false },
     answers: { type: Array, required: false },
     tags: { type: Array, required: false },
-    imgUrl: { type: String, required: false }
+    imgUrl: { type: String, required: false },
+    showInActivity:{ type: Number, default: 1 }
 
 });
 

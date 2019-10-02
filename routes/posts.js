@@ -10,7 +10,8 @@ const valPost = new Joi.object().keys({
     parentId: Joi.string().alphanum().min(5).required(),
     title: Joi.string().required(),
     des: Joi.string().required(),
-    body: Joi.string().required()
+    body: Joi.string().required(),
+    showInActivity:Joi.number().default(1)
 
 });
 
@@ -27,6 +28,26 @@ router.get('/category', async (req, res) => {
     }
     try {
         const posts = await Post.find({ parentId: req.query.id });
+        return res.status(200).json(posts);
+    } catch (error) {
+        return res.status(400).json({ error: error.message });
+    }
+});
+
+//get latest posts:
+router.get('/last', async (req, res) => {
+    try {
+        const posts = await Post.find({ showInActivity: 1 }).limit(10).sort({createdAt: -1});
+        return res.status(200).json(posts);
+    } catch (error) {
+        return res.status(400).json({ error: error.message });
+    }
+});
+
+//get all posts:
+router.get('/', async (req, res) => {
+    try {
+        const posts = await Post.find();
         return res.status(200).json(posts);
     } catch (error) {
         return res.status(400).json({ error: error.message });
@@ -75,7 +96,8 @@ router.post('/add', tokenValidate, async (req, res) => {
             comments: undefined,
             answers: undefined,
             tags: undefined,
-            imgUrl: '/uploads/postsImg/' + fileName
+            imgUrl: '/uploads/postsImg/' + fileName,
+            showInActivity: req.body.showInActivity
 
         });
     } else {
@@ -90,7 +112,8 @@ router.post('/add', tokenValidate, async (req, res) => {
             commentsCount: 0,
             comments: undefined,
             answers: undefined,
-            tags: undefined
+            tags: undefined,
+            showInActivity: req.body.showInActivity
 
         });
     }
