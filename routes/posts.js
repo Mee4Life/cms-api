@@ -37,7 +37,7 @@ router.get('/category', async (req, res) => {
 //get latest posts:
 router.get('/last', async (req, res) => {
     try {
-        const posts = await Post.find({ showInActivity: 1 }).limit(10).sort({createdAt: -1});
+        const posts = await Post.find({ showInActivity: 1 }).limit(10).sort({updatedAt: -1});
         return res.status(200).json(posts);
     } catch (error) {
         return res.status(400).json({ error: error.message });
