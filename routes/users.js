@@ -194,4 +194,15 @@ router.get('/conformation-info', tokenValidate, async (req, res) => {
 
 });
 
+//getUserInfoFromId
+router.get('/getInfo', async(req, res)=>{
+    if (!req.query.id) { return res.status(400).json({ error: 'add the user id in the request' }); }
+    try {
+        const user = await User.findById(req.query.id).select('_id fname lname username email photoUrl admin');
+        return res.status(200).json(user);
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+});
+
 module.exports = router;
