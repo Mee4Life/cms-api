@@ -7,7 +7,7 @@ const Category = require('../models/Category');
 
 //word validate schema:
 const wordSchema = new Joi.object().keys({
-    content: Joi.string().min(3).required(),
+    content: Joi.string().min(2).required(),
 });
 
 //search by word;
@@ -24,9 +24,9 @@ router.get('', async(req, res)=>{
     var categories;
     var posts;
     try {
-        tags = await Tag.find({ $text: { $search: word } });
-        categories = await Category.find({ $text: { $search: word } });
-        posts = await Post.find({ $text: { $search: word } });
+        tags = await Tag.find({ $text: { $search: word } }).select('_id name postsCount');
+        categories = await Category.find({ $text: { $search: word } }).select('_id title des');
+        posts = await Post.find({ $text: { $search: word } }).select('_id title des');
 
         return res.status(200).json({tags: tags, posts: posts, categories: categories});
     } catch (error) {
