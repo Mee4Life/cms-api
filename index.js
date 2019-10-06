@@ -7,6 +7,7 @@ const upload = require('express-fileupload');
 // connect to the database :
 const mongoose = require('mongoose');
 mongoose.set({ 'useFindAndModify': false });
+mongoose.set('useCreateIndex', true);
 mongoose.connect(process.env.DB_HOST,
     {
         useNewUrlParser: true,
@@ -41,6 +42,9 @@ app.use('/tags', tags);
 //search:
 const searchRoute = require('./routes/search');
 app.use('/search', searchRoute);
+//file:
+const fileRoute = require('./routes/getFiles');
+app.use('/file', fileRoute);
 
 app.listen(3000, () => {
     console.log("Server working on Port: 3000");
