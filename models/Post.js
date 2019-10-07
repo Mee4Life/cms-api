@@ -9,6 +9,8 @@ const ReplaySchema = new mongoose.Schema({
     body:{ type: String, required: true }, 
     likesCount:{ type: Number, default: 0 },
     authorInfo: UserInfoSchema,
+    likers: [UserInfoSchema],
+
 });
 
 //comment schema:
@@ -19,6 +21,8 @@ const CommentSchema = new mongoose.Schema({
     replaysCount:{ type: Number, default: 0 },
     replays:[ReplaySchema],
     authorInfo: UserInfoSchema,
+    likers: [UserInfoSchema],
+    
 });
 
 ReplaySchema.index({'$**': 'text'});

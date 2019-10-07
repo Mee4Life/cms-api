@@ -235,6 +235,11 @@ router.post('/replay', tokenValidate, async(req, res)=>{
         userComment.replaysCount++;
         await commenter.save();
 
+        //save the replay to comment replays array:
+        const commentReplays = await Comment.findById(replay.commentId);
+        commentReplays.replays.push(replay);
+        await commentReplays.save();
+
         //send the res:
         return res.status(200).json({_id: replay._id});
     } catch (error) {
@@ -383,16 +388,13 @@ router.post('/like', tokenValidate, async(req, res)=>{
     const post = await Post.findById(req.body.postId);
     var likers = post.likers;
 
-    var alreadyLiked = false;
     //check if the user already liked the post:
     var userInfoCard = likers.find((userInfoCard)=>{
        return userInfoCard.id == req.user.id;
     });
-    if(userInfoCard){
-        alreadyLiked = true;
-    }
+    
     //if the user already liked
-    if(alreadyLiked){
+    if(userInfoCard){
         //decrease the likes count
         post.likesCount--;
         //remove the user from the likers:
@@ -411,11 +413,190 @@ router.post('/like', tokenValidate, async(req, res)=>{
 
     try {
         await post.save();
-        return res.status(200).json({_id: post._id});
+        return res.status(200).json({likesCount: post.likesCount, _id: post._id});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
     
+});
+
+//toggle comment like:
+router.post('/comment/like', tokenValidate, async(req,res)=>{
+    //check if the req body has the post, comment ids:
+    if(!req.body.postId || !req.body.commentId){
+        return res.status(400).json({error: 'add the post, comment ids'});
+    }
+
+    try {
+        //get the comment, post, user obj:
+        const comment = await Comment.findById(req.body.commentId);
+        const post = await Post.findById(req.body.postId);
+        const user = await User.findById(req.user.id);
+
+        //check if the user already liked the comment:
+        var userInfoCard;
+        userInfoCard = comment.likers.find((userInfoCard)=>{
+            return userInfoCard.id == req.user.id;
+        });
+        //if the user already liked
+        if(userInfoCard){
+            /** ----------------------------------------- */
+            //decrease the likes count in the comments doc
+            /** ----------------------------------------- */
+            comment.likesCount--;
+            //remove the user from the likers:
+            const newLikersArr = comment.likers.filter((userInfoCard)=>{
+                return userInfoCard.id != req.user.id;
+            });
+            comment.likers = newLikersArr;
+            await comment.save();
+            /** ----------------------------------------- */
+            //decrease the likes count in the post comments doc
+            /** ----------------------------------------- */
+            //get the comment from the post comments array
+            const postComment = post.comments.find((comment)=>{
+                return comment._id == req.body.commentId;
+            });
+            postComment.likesCount--;
+            //remove the user from the users like array:
+            const postCommentLikers = postComment.likers.filter((userInfoCard)=>{
+                return userInfoCard.id != req.user.id;
+            });
+            postComment.likers = postCommentLikers;
+            //save the post after toggle:
+            await post.save();
+            /** ----------------------------------------- */
+            //decrease the likes count in the user comments doc
+            /** ----------------------------------------- */
+            const userComment = user.comments.find((comment)=>{
+                return comment._id == req.body.commentId;
+            });
+            userComment.likesCount--;
+            //remove the user from the users like array:
+            const userCommentLikers = userComment.likers.filter((userInfoCard)=>{
+                return userInfoCard.id != req.user.id;
+            });
+            userComment.likers = userCommentLikers;
+            //save the user after toggle:
+            await user.save();
+        }else{
+            /** ----------------------------------------- */
+            //increase the likes count in the comments doc
+            /** ----------------------------------------- */
+            //increase the likes count in the comments doc:
+            comment.likesCount++;
+            //add the user to the likers:
+            //get user card
+            userInfoCard = await UserInfo.findOne({id: req.user.id});
+            comment.likers.push(userInfoCard);
+            await comment.save();
+            /** ----------------------------------------- */
+            //increase the likes count in the post comments doc
+            /** ----------------------------------------- */
+            const postComment = post.comments.find((comment)=>{
+                return comment._id == req.body.commentId;
+            });
+            postComment.likesCount++;
+            //add the user from the users like array:
+            postComment.likers.push(userInfoCard);
+            //save the post after toggle:
+            await post.save();
+            /** ----------------------------------------- */
+            //increase the likes count in the user comments doc
+            /** ----------------------------------------- */
+            const userComment = user.comments.find((comment)=>{
+                return comment._id == req.body.commentId;
+            });
+            userComment.likesCount++;
+            //add the user from the users like array:
+            userComment.likers.push(userInfoCard);
+            //save the user after toggle:
+            await user.save();
+        }
+        res.status(200).json({commentId: comment.commentId, likesCount: comment.likesCount})
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+});
+
+//replay toggle like: 
+router.post('/replay/like', tokenValidate, async(req, res)=>{
+    //check if request has the post, comment, replay ids
+    if(!req.body.postId || !req.body.commentId || !req.body.replayId){
+        return res.status(400).json({error: 'add the post, comment, replay ids in the request'});
+    }
+
+    try {
+        //get the post, user, comment replay obj:
+        const post = await Post.findById(req.body.postId);
+        const user = await User.findById(req.user.id);
+        const comment = await Comment.findById(req.body.commentId);
+        //post replay:
+        const postReplay = post.comments.find((comment)=>{
+            return comment._id == req.body.commentId
+        }).replays.find((replay)=>{
+            return replay._id == req.body.replayId;
+        });
+        // comment replay:
+        console.log(comment.replays)
+        const commentReplay = comment.replays.find((replay)=>{
+            return replay._id == req.body.replayId;
+        });
+        //user replay:
+        const userReplay = user.comments.find((comment)=>{
+            return comment._id == req.body.commentId
+        }).replays.find((replay)=>{
+            return replay._id == req.body.replayId;
+        });
+        // replay:
+        const replay = await Replay.findById(req.body.replayId);
+
+        //check if the user already liked the replay:
+        const userInfoCard = postReplay.likers.find((userInfoCard)=>{
+            return userInfoCard.id == req.user.id;
+        });
+        if(userInfoCard){
+            //decrease the likes count:
+            postReplay.likesCount--;
+            userReplay.likesCount--;
+            commentReplay.likesCount--;
+            replay.likesCount--;
+            //remove the user card:
+            const replayLikers = postReplay.likers.filter((userInfoCard)=>{
+                return userInfoCard.id != req.user.id;
+            });
+            postReplay.likers = replayLikers;
+            userReplay.likers = replayLikers;
+            commentReplay.likers = replayLikers;
+            replay.likers = replayLikers;
+
+        }else{
+            //increase the  replay likes count
+            postReplay.likesCount++;
+            userReplay.likesCount++;
+            commentReplay.likesCount++;
+            replay.likesCount++;
+            // add the user to the likers:
+            //get user card
+            const newUserInfoCard = await UserInfo.findOne({id: req.user.id});
+            postReplay.likers.push(newUserInfoCard);
+            userReplay.likers.push(newUserInfoCard);
+            commentReplay.likers.push(newUserInfoCard);
+            replay.likers.push(newUserInfoCard);
+        }
+        
+        
+        await post.save();
+        await comment.save();
+        await user.save();
+        await replay.save();
+
+        return res.json({_id: replay._id, likesCount: replay.likesCount});
+        
+
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
 });
 
 module.exports = router;

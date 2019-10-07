@@ -21,6 +21,7 @@ const UserReplaySchema = new mongoose.Schema({
     body:{ type: String, required: true }, 
     likesCount:{ type: Number, default: 0 },
     authorInfo: UserInfoSchema,
+    likers: [UserInfoSchema],
 });
 UserReplaySchema.plugin(mongooseTimeStamp);
 
@@ -32,6 +33,7 @@ const UserCommentSchema = new mongoose.Schema({
     replaysCount:{ type: Number, default: 0 },
     replays:[UserReplaySchema],
     authorInfo: UserInfoSchema,
+    likers: [UserInfoSchema],
 
 });
 UserCommentSchema.plugin(mongooseTimeStamp);
