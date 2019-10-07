@@ -40,7 +40,8 @@ const PostSchema = new mongoose.Schema({
     tags: { type: Array, required: false },
     imgUrl: { type: String, required: false },
     showInActivity:{ type: Number, default: 1 },
-    authorInfo: {type: UserInfoSchema, required:true}
+    authorInfo: {type: UserInfoSchema, required:true},
+    likers:[UserInfoSchema],
 
 });
 

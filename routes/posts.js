@@ -372,4 +372,50 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
     }
 });
 
+
+// like/unlike post request:
+router.post('/like', tokenValidate, async(req, res)=>{
+    //check if the user has the post id in the request:
+    if(!req.body.postId){
+        return res.status(400).json({error: 'add the post id in the request'});
+    }
+
+    const post = await Post.findById(req.body.postId);
+    var likers = post.likers;
+
+    var alreadyLiked = false;
+    //check if the user already liked the post:
+    var userInfoCard = likers.find((userInfoCard)=>{
+       return userInfoCard.id == req.user.id;
+    });
+    if(userInfoCard){
+        alreadyLiked = true;
+    }
+    //if the user already liked
+    if(alreadyLiked){
+        //decrease the likes count
+        post.likesCount--;
+        //remove the user from the likers:
+        const newLikersArr = likers.filter((userInfoCard)=>{
+            return userInfoCard.id != req.user.id;
+        });
+        post.likers = newLikersArr;
+    }else{
+        //increase the likes count :
+        post.likesCount++;
+        //add the user to the likers:
+        //get user card
+        userInfoCard = await UserInfo.findOne({id: req.user.id});
+        likers.push(userInfoCard);
+    }
+
+    try {
+        await post.save();
+        return res.status(200).json({_id: post._id});
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+    
+});
+
 module.exports = router;
