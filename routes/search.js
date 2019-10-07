@@ -2,7 +2,7 @@ const router = require('express').Router();
 const Joi = require('@hapi/joi');
 
 const Tag = require('../models/Tag');
-const Post = require('../models/Post');
+const Post = require('../models/Post').post;
 const Category = require('../models/Category');
 
 //word validate schema:

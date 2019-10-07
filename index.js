@@ -11,7 +11,8 @@ mongoose.set('useCreateIndex', true);
 mongoose.connect(process.env.DB_HOST,
     {
         useNewUrlParser: true,
-        useUnifiedTopology: true
+        useUnifiedTopology: true,
+        useFindAndModify: false
     });
 // check if the we connected to db or not 
 var db = mongoose.connection;

@@ -5,7 +5,7 @@ var jwt = require('jsonwebtoken');
 const tokenValidate = require('../token_validate');
 
 
-const User = require('../models/User');
+const User = require('../models/User').user;
 
 //Data validate Schemas
 userRegisterValidate = new Joi.object().keys({
