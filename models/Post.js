@@ -1,36 +1,24 @@
 const mongoose = require('mongoose');
 const mongooseTime = require('mongoose-timestamp');
-
+const UserInfoSchema = require('./User').userInfo.schema;
 
 //ReplaySchema :
 const ReplaySchema = new mongoose.Schema({
     postId: {type:String, required: true},
     commentId:{type: String, required: true},
-    authorId:{type: String},
-    fname: { type: String},
-    lname: { type: String},
-    username: { type: String},
-    email: { type: String},
-    userImg: { type: String},
     body:{ type: String, required: true }, 
-    likesCount:{ type: Number, default: 0 }
+    likesCount:{ type: Number, default: 0 },
+    authorInfo: UserInfoSchema,
 });
 
 //comment schema:
 const CommentSchema = new mongoose.Schema({
     postId:{type: String, required: true},
-    authorId:{type: String},
-    fname: { type: String},
-    lname: { type: String},
-    username: { type: String},
-    email: { type: String},
-    userImg: { type: String},
     body:{ type: String, required: true }, 
     likesCount:{ type: Number, default: 0 }, 
     replaysCount:{ type: Number, default: 0 },
-    replays:[ReplaySchema]
-
-
+    replays:[ReplaySchema],
+    authorInfo: UserInfoSchema,
 });
 
 ReplaySchema.index({'$**': 'text'});
@@ -43,7 +31,6 @@ const Comment = mongoose.model('Comment', CommentSchema);
 
 const PostSchema = new mongoose.Schema({
     parentId: { type: String, required: true },
-    authorId: { type: String, required: true },
     title: { type: String, required: true },
     des: { type: String, required: true },
     body: { type: String, required: true },
@@ -52,7 +39,8 @@ const PostSchema = new mongoose.Schema({
     comments: [CommentSchema],
     tags: { type: Array, required: false },
     imgUrl: { type: String, required: false },
-    showInActivity:{ type: Number, default: 1 }
+    showInActivity:{ type: Number, default: 1 },
+    authorInfo: {type: UserInfoSchema, required:true}
 
 });
 

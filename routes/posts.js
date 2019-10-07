@@ -7,6 +7,7 @@ const Post = require('../models/Post').post;
 const Comment = require('../models/Post').comment;
 const Replay = require('../models/Post').replay;
 const User = require('../models/User').user;
+const UserInfo = require('../models/User').userInfo;
 
 //data validate :
 const valPost = new Joi.object().keys({
@@ -103,36 +104,37 @@ router.post('/add', tokenValidate, async (req, res) => {
         });
     }
 
+    const userInfoCard = await UserInfo.findOne({id: req.user.id});
+
     var post;
     if (hasPhoto) {
         //create post obj with img
         post = new Post({
             parentId: req.body.parentId,
-            authorId: req.user.id,
             title: req.body.title,
             des: req.body.des,
             body: req.body.body,
             likesCount: 0,
             commentsCount: 0,
             comments: req.body.comments,
-            answers: undefined,
             tags: undefined,
             imgUrl: '/uploads/postsImg/' + fileName,
             showInActivity: req.body.showInActivity,
+            authorInfo: userInfoCard,
 
         });
     } else {
         //create post obj with out img
         post = new Post({
             parentId: req.body.parentId,
-            authorId: req.user.id,
             title: req.body.title,
             des: req.body.des,
             body: req.body.body,
             likesCount: 0,
             commentsCount: 0,
             tags: undefined,
-            showInActivity: req.body.showInActivity
+            showInActivity: req.body.showInActivity,
+            authorInfo: userInfoCard,
 
         });
     }
@@ -152,18 +154,18 @@ router.post('/comment', tokenValidate, async(req, res)=>{
     const userId = req.user.id;
     const commenter = await User.findById(userId);
     const postId = req.body.postId;
+
+    //get user card
+    const userInfoCard = await UserInfo.findOne({id: req.user.id});
+
     const comment = new Comment({
         postId: postId,
-        authorId: commenter._id,
-        fname: commenter.fname,
-        lname: commenter.lname,
-        username: commenter.username,
-        email: commenter.email,
-        userImg: commenter.photoUrl,
         body: req.body.body,
         replays: req.body.replays,
         likesCount: 0,
-        replaysCount: 0 
+        replaysCount: 0,
+        authorInfo: userInfoCard,
+
     });
 
     try {
@@ -193,18 +195,17 @@ router.post('/replay', tokenValidate, async(req, res)=>{
     const commenter = await User.findById(userId);
     const postId = req.body.postId;
     
+    //get user card
+    const userInfoCard = await UserInfo.findOne({id: req.user.id});
+
     //create replay obj
     const replay = new Replay({
         postId: postId,
         commentId: req.body.commentId,
-        authorId: commenter._id,
-        fname: commenter.fname,
-        lname: commenter.lname,
-        username: commenter.username,
-        email: commenter.email,
-        userImg: commenter.photoUrl,
         body: req.body.body,
-        likesCount: 0
+        likesCount: 0,
+        authorInfo: userInfoCard,
+
     });
 
     try {

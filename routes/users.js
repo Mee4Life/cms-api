@@ -100,6 +100,20 @@ router.post('/register', async (req, res) => {
     try {
         const newUser = await user.save();
         var token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        
+        //create the user info card:
+        const userInfoCard = new UserInfo({
+            fname: user.fname,
+            lname: user.lname,
+            username: user.username,
+            email: user.email,
+            photoUrl: user.photoUrl,
+            id:user._id,
+            admin: user.admin,
+            photoUrl: user.photoUrl
+        });
+        await userInfoCard.save();
+
         res.status(201).json({ token: token });
     } catch (err) {
         res.status(400).json({ error: 'user cant be registered' });
