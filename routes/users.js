@@ -6,6 +6,7 @@ const tokenValidate = require('../token_validate');
 
 
 const User = require('../models/User').user;
+const UserInfo = require('../models/User').userInfo;
 
 //Data validate Schemas
 userRegisterValidate = new Joi.object().keys({
@@ -214,6 +215,16 @@ router.get('/getInfo', async(req, res)=>{
     try {
         const user = await User.findById(req.query.id).select('_id fname lname username email photoUrl admin');
         return res.status(200).json(user);
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+});
+
+//get user card:
+router.get('/getUserCard', tokenValidate, async(req, res)=>{
+    try {
+        const userInfo = await UserInfo.findOne({id: req.user.id});
+        return res.status(200).json(userInfo);
     } catch (error) {
         return res.status(400).json({error: error.message});
     }

@@ -184,7 +184,6 @@ router.post('/comment', tokenValidate, async(req, res)=>{
         await commenter.save();
         return res.status(200).json({_id: comment._id});
     } catch (error) {
-        console.log(comment);
         return res.status(400).json({error: error.message});
     }
 });
@@ -394,6 +393,7 @@ router.post('/like', tokenValidate, async(req, res)=>{
     });
     
     //if the user already liked
+    var action;
     if(userInfoCard){
         //decrease the likes count
         post.likesCount--;
@@ -402,6 +402,8 @@ router.post('/like', tokenValidate, async(req, res)=>{
             return userInfoCard.id != req.user.id;
         });
         post.likers = newLikersArr;
+        //action dislike:
+        action = 0;
     }else{
         //increase the likes count :
         post.likesCount++;
@@ -409,11 +411,13 @@ router.post('/like', tokenValidate, async(req, res)=>{
         //get user card
         userInfoCard = await UserInfo.findOne({id: req.user.id});
         likers.push(userInfoCard);
+        //action dislike:
+        action = 1;
     }
 
     try {
         await post.save();
-        return res.status(200).json({likesCount: post.likesCount, _id: post._id});
+        return res.status(200).json({likesCount: post.likesCount, _id: post._id, action: action});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
@@ -479,6 +483,7 @@ router.post('/comment/like', tokenValidate, async(req,res)=>{
             userComment.likers = userCommentLikers;
             //save the user after toggle:
             await user.save();
+            action = 0; // dislike
         }else{
             /** ----------------------------------------- */
             //increase the likes count in the comments doc
@@ -512,8 +517,9 @@ router.post('/comment/like', tokenValidate, async(req,res)=>{
             userComment.likers.push(userInfoCard);
             //save the user after toggle:
             await user.save();
+            action = 1; // like
         }
-        res.status(200).json({commentId: comment.commentId, likesCount: comment.likesCount})
+        return res.status(200).json({commentId: comment._id, likesCount: comment.likesCount, action: action})
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
@@ -538,7 +544,6 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
             return replay._id == req.body.replayId;
         });
         // comment replay:
-        console.log(comment.replays)
         const commentReplay = comment.replays.find((replay)=>{
             return replay._id == req.body.replayId;
         });
@@ -552,6 +557,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
         const replay = await Replay.findById(req.body.replayId);
 
         //check if the user already liked the replay:
+        var action ;
         const userInfoCard = postReplay.likers.find((userInfoCard)=>{
             return userInfoCard.id == req.user.id;
         });
@@ -569,6 +575,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
             userReplay.likers = replayLikers;
             commentReplay.likers = replayLikers;
             replay.likers = replayLikers;
+            action = 0; // dislike
 
         }else{
             //increase the  replay likes count
@@ -583,6 +590,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
             userReplay.likers.push(newUserInfoCard);
             commentReplay.likers.push(newUserInfoCard);
             replay.likers.push(newUserInfoCard);
+            action = 1; // like
         }
         
         
@@ -591,7 +599,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
         await user.save();
         await replay.save();
 
-        return res.json({_id: replay._id, likesCount: replay.likesCount});
+        return res.json({_id: replay._id, likesCount: replay.likesCount, action: action});
         
 
     } catch (error) {
