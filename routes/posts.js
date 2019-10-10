@@ -394,6 +394,7 @@ router.post('/like', tokenValidate, async(req, res)=>{
     
     //if the user already liked
     var action;
+    var likersRes;
     if(userInfoCard){
         //decrease the likes count
         post.likesCount--;
@@ -404,6 +405,7 @@ router.post('/like', tokenValidate, async(req, res)=>{
         post.likers = newLikersArr;
         //action dislike:
         action = 0;
+        likersRes = newLikersArr;
     }else{
         //increase the likes count :
         post.likesCount++;
@@ -413,11 +415,12 @@ router.post('/like', tokenValidate, async(req, res)=>{
         likers.push(userInfoCard);
         //action dislike:
         action = 1;
+        likersRes = likers;
     }
 
     try {
         await post.save();
-        return res.status(200).json({likesCount: post.likesCount, _id: post._id, action: action});
+        return res.status(200).json({likesCount: post.likesCount, _id: post._id, action: action, likers: likersRes});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
