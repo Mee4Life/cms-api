@@ -610,4 +610,49 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
     }
 });
 
+//get post likers:
+router.get('/likers', async(req, res)=>{
+    //check if the request has the post id:
+    if(!req.query.postId){
+        return res.status(400).json({error: 'add the post id in the request'});
+    }
+
+    try {
+        const postLikers = await Post.findById(req.query.postId).select('likers likesCount');
+        return res.status(200).json(postLikers);
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+});
+
+//get comment likers:
+router.get('/comments/likers', async(req, res)=>{
+    //check if the request has the comment id:
+    if(!req.query.commentId){
+        return res.status(400).json({error: 'add the comment id in the request'});
+    }
+
+    try {
+        const commentLikers = await Comment.findById(req.query.commentId).select('likers likesCount');
+        return res.status(200).json(commentLikers);
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+});
+
+//get replay likers:
+router.get('/replays/likers', async(req, res)=>{
+    //check if the request has the replay id:
+    if(!req.query.replayId){
+        return res.status(400).json({error: 'add the replay id in the request'});
+    }
+
+    try {
+        const replayLikers = await Post.findById(req.query.replayId).select('likers likesCount');
+        return res.status(200).json(replayLikers);
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+});
+
 module.exports = router;
