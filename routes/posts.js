@@ -153,6 +153,12 @@ router.post('/add', tokenValidate, async (req, res) => {
 router.post('/comment', tokenValidate, async(req, res)=>{
     const userId = req.user.id;
     const commenter = await User.findById(userId);
+
+    //check if request has the post id and the comment body:
+    if(!req.body.body || !req.body.postId){
+        return res.status(400).json({error: 'add the post id and the comment body in the request'})
+    }
+
     const postId = req.body.postId;
 
     //get user card
@@ -161,9 +167,6 @@ router.post('/comment', tokenValidate, async(req, res)=>{
     const comment = new Comment({
         postId: postId,
         body: req.body.body,
-        replays: req.body.replays,
-        likesCount: 0,
-        replaysCount: 0,
         authorInfo: userInfoCard,
 
     });
@@ -182,7 +185,7 @@ router.post('/comment', tokenValidate, async(req, res)=>{
         //increase the user comments counter:
         commenter.commentsCount++;
         await commenter.save();
-        return res.status(200).json({_id: comment._id});
+        return res.status(200).json({_id: comment._id, comments: targetPost.comments, commentsCount: targetPost.commentsCount});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
@@ -190,6 +193,10 @@ router.post('/comment', tokenValidate, async(req, res)=>{
 
 //add replay:
 router.post('/replay', tokenValidate, async(req, res)=>{
+    //check if the request has the comment post ids and replay body:
+    if(!req.body.postId || !req.body.body || !req.body.commentId){
+        return res.status(400).json({error: 'add the post comment ids and replay body in the request'});
+    }
     const userId = req.user.id;
     const commenter = await User.findById(userId);
     const postId = req.body.postId;
@@ -202,7 +209,6 @@ router.post('/replay', tokenValidate, async(req, res)=>{
         postId: postId,
         commentId: req.body.commentId,
         body: req.body.body,
-        likesCount: 0,
         authorInfo: userInfoCard,
 
     });
@@ -240,7 +246,7 @@ router.post('/replay', tokenValidate, async(req, res)=>{
         await commentReplays.save();
 
         //send the res:
-        return res.status(200).json({_id: replay._id});
+        return res.status(200).json({_id: replay._id, commentId: replay.commentId, postId: replay.postId, replays: comment.replays});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
