@@ -246,7 +246,7 @@ router.post('/replay', tokenValidate, async(req, res)=>{
         await commentReplays.save();
 
         //send the res:
-        return res.status(200).json({_id: replay._id, commentId: replay.commentId, postId: replay.postId, replays: comment.replays});
+        return res.status(200).json({_id: replay._id, commentId: replay.commentId, postId: replay.postId, replays: comment.replays, replaysCount: comment.replaysCount});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
@@ -329,7 +329,7 @@ router.delete('/comment', tokenValidate, async(req, res)=>{
         //save the user after edit
         await user.save();
         
-        return res.status(200).json({_id: commentId});
+        return res.status(200).json({_id: commentId, commentsCount: post.commentsCount, postId: post._id, comments:post.comments});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
@@ -376,7 +376,7 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
         //save the user after edit:
         await user.save();
         
-        return res.status(200).json({_id: req.query.replayId});
+        return res.status(200).json({_id: req.query.replayId, commentId: comment._id, postId: post._id, replays: comment.replays, replaysCount: comment.replaysCount});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
