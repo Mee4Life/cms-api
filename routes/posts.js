@@ -435,6 +435,7 @@ router.post('/comment/like', tokenValidate, async(req,res)=>{
     }
 
     try {
+        //TODO GET THE POST DIRECT FROM THE COMMENT NO NEED TO ADD THE POST TO THE REQUEST
         //get the comment, post, user obj:
         const comment = await Comment.findById(req.body.commentId);
         const post = await Post.findById(req.body.postId);
@@ -536,6 +537,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
     }
 
     try {
+        //TODO GET THE POST AND THE COMMENT DIRECT FROM THE REPLAY NO NEED TO ADD IT TO THE REQUEST
         //get the post, user, comment replay obj:
         const post = await Post.findById(req.body.postId);
         const user = await User.findById(req.user.id);
