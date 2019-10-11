@@ -650,7 +650,7 @@ router.get('/replays/likers', async(req, res)=>{
     }
 
     try {
-        const replayLikers = await Post.findById(req.query.replayId).select('likers likesCount');
+        const replayLikers = await Replay.findById(req.query.replayId).select('likers likesCount');
         return res.status(200).json(replayLikers);
     } catch (error) {
         return res.status(400).json({error: error.message});
