@@ -246,7 +246,7 @@ router.post('/replay', tokenValidate, async(req, res)=>{
         await commentReplays.save();
 
         //send the res:
-        return res.status(200).json({_id: replay._id, commentId: replay.commentId, postId: replay.postId, replays: comment.replays, replaysCount: comment.replaysCount});
+        return res.status(200).json({_id: replay._id, comment: comment});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
