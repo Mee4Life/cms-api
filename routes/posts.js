@@ -670,4 +670,54 @@ router.get('/replays/likers', async(req, res)=>{
     }
 });
 
+//update comment:
+router.patch('/comment', tokenValidate, async(req, res)=>{
+    //check if the commentId in the request:
+    if(!req.body.commentId || !req.body.commentBody){
+        return res.status(400).json({error: 'add the comment id in the request'});
+    }
+    try {
+        console.log(req.body.commentId + ' comment id before update');
+        //check if the author or user id admin:
+        var user = await User.findById(req.user.id);
+        const comment = await Comment.findById(req.body.commentId);
+        const post = await Post.findById(comment.postId);
+        if(user.admin != 1 && comment.authorInfo.id != user.id){
+            return res.status(400).json({error: 'only the comment author or admins can update the comment'});
+        }
+        //update the user to the comment author:
+        user = await User.findById(comment.authorInfo.id);
+        //update the comment in the comments doc
+        comment.body = req.body.commentBody;
+        await comment.save();
+        //update the comment in the user comments doc
+        //find the comment in user post :
+        var userComment = user.comments.find((c)=>{
+            console.log(c._id+'\n'+comment._id+'\n')
+            return c._id == req.body.commentId
+        });
+        console.log(userComment);
+        var postComment = post.comments.find((c)=>{
+            return c._id == req.body.commentId
+        });
+        //update the comment in user and post
+        userComment.body = comment.body;
+        postComment.body = comment.body;
+        console.log(postComment.body);
+        //save the post and user:
+        await user.save();
+        await post.save();
+
+        return res.status(200).json({
+            commentId: comment._id,
+            postId: post._id,
+            commentsCount: post.commentsCount,
+            postComments: post.comments
+        });
+
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+})
+
 module.exports = router;
