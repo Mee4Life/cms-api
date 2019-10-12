@@ -298,8 +298,16 @@ router.delete('/comment', tokenValidate, async(req, res)=>{
     const postId = req.query.postId;
 
     try {
+        
+        //check if the current user is the author or admin:
+        const comment = await Comment.findById(commentId);
+        const user = await User.findById(req.user.id);
+        if(comment.authorInfo.id != req.user.id && user.admin != 1){
+            return res.status(400).json({error: 'just the author/admin can delete the comment'})
+        }
+
         //remove the comment from the comments array:
-        await Comment.findOneAndRemove({_id: commentId});
+        await comment.remove();
 
         //remove the replays for the target comment
         await Replay.deleteMany({commentId: req.query.commentId});
@@ -317,7 +325,6 @@ router.delete('/comment', tokenValidate, async(req, res)=>{
         //save the post after edit
         await post.save();
         //remove the comment from the user comments array:
-        const user = await User.findById(req.user.id);
         //create new user comments array with out the comment we need to delete 
         const userComments = user.comments.filter((comment)=>{
             return comment._id != commentId
