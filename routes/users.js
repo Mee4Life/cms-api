@@ -160,7 +160,9 @@ router.post('/login', async (req, res) => {
 
     // setting up the token for the login
     var token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    res.status(200).json({ token: token });
+    //get user card:
+    const userCard = await UserInfo.findOne({id: user._id});
+    res.status(200).json({ token: token, userCard: userCard });
 
 });
 
