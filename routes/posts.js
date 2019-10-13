@@ -354,21 +354,21 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
         const replay = await Replay.findById(req.query.replayId);
 
         const post = await Post.findById(replay.postId);
-        const comment = post.comments.find((comment)=>{
+        const postComment = post.comments.find((comment)=>{
             return comment._id == replay.commentId+'';
         });
         //filter the replay array from the target replay:
-        const replays = comment.replays.filter((replay)=>{
+        const replays = postComment.replays.filter((replay)=>{
             return replay._id != req.query.replayId;
         });
         //save the replays to the comment replays
-        comment.replays = replays;
+        postComment.replays = replays;
         //decrease the replays count:
-        comment.replaysCount--;
+        postComment.replaysCount--;
         //save the post after edit:
         await post.save();
 
-        //remove the replay from the comment replays array:
+        //remove the replay from the user comment replays array:
         const user = await User.findById(req.user.id);
         const userComment = user.comments.find((comment)=>{
             return comment._id == replay.commentId;
@@ -383,6 +383,14 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
         //save the user after edit:
         await user.save();
 
+        //remove replay from the comments doc:
+        const  comment = await Comment.findById(replay.commentId);
+        const commentReplays = comment.replays.filter((r)=>{
+            return r._id != String(replay._id)
+        });
+        comment.replays = commentReplays;
+        comment.save();
+        
         //remove the replay form the replays array:
         await replay.remove();
         
