@@ -389,6 +389,7 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
             return r._id != String(replay._id)
         });
         comment.replays = commentReplays;
+        comment.replaysCount--;
         comment.save();
 
         //remove the replay form the replays array:
