@@ -345,17 +345,16 @@ router.delete('/comment', tokenValidate, async(req, res)=>{
 //delete replay:
 router.delete('/replay', tokenValidate, async(req, res)=>{
     //check if the request has the comment id and the post id and the replay id 
-    if(!req.query.postId || !req.query.commentId || !req.query.replayId){
-        return res.status(400).json({error: 'check if the post id, comment id and the replay id in the request'});
+    if(!req.query.replayId){
+        return res.status(400).json({error: 'check if the replay id in the request'});
     }
 
     try {
-        //remove the replay form the replays array:
-        Replay.findOneAndRemove({_id: req.query.replayId});
+        const replay = await Replay.findById(req.query.replayId);
 
-        const post = await Post.findById(req.query.postId);
+        const post = await Post.findById(replay.postId);
         const comment = post.comments.find((comment)=>{
-            return comment._id == req.query.commentId;
+            return comment._id == replay.commentId+'';
         });
         //filter the replay array from the target replay:
         const replays = comment.replays.filter((replay)=>{
@@ -371,19 +370,22 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
         //remove the replay from the comment replays array:
         const user = await User.findById(req.user.id);
         const userComment = user.comments.find((comment)=>{
-            return comment._id == req.query.commentId;
+            return comment._id == replay.commentId;
         });
         //filter the comment replays array from the replay:
         const userReplays = userComment.replays.filter((replay)=>{
-            return replay != req.query.replayId;
+            return replay._id != req.query.replayId;
         });
         userComment.replays = userReplays;
         //decrease the replays count:
         userComment.replaysCount--;
         //save the user after edit:
         await user.save();
+
+        //remove the replay form the replays array:
+        await replay.remove();
         
-        return res.status(200).json({_id: req.query.replayId, commentId: comment._id, postId: post._id, replays: comment.replays, replaysCount: comment.replaysCount});
+        return res.status(200).json({_id: req.query.replayId, comment: comment});
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
