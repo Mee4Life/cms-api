@@ -720,6 +720,69 @@ router.patch('/comment', tokenValidate, async(req, res)=>{
     } catch (error) {
         return res.status(400).json({error: error.message});
     }
-})
+});
+
+//update replay:
+router.patch('/replay', tokenValidate, async(req, res)=>{
+    //check if the request has the replay id, body:
+    if(!req.body.replayId || !req.body.replayBody){
+        return res.status(400).json({error: 'add the replay id, body to the request '});
+    }
+
+    try {
+        //extract the data:
+        const user = await User.findById(req.user.id);
+        const replay = await Replay.findById(req.body.replayId);
+        const post = await Post.findById(replay.postId);
+        const comment = await Comment.findById(replay.commentId);
+
+        //check if the user is the author or admin:
+        if(replay.authorInfo.id != req.user.id && user.admin != 1){
+            return res.status(400).json({error: 'only the other and the admin can update the replay'});
+        }
+
+        //update replay:
+
+        //post:
+        const postReplay = post.comments.find((comment)=>{
+            return comment._id == String(replay.commentId)
+        }).replays.find((r)=>{
+            return r._id == String(replay._id)
+        });
+        postReplay.body == req.body.replayBody;
+        //save post 
+        await post.save();
+
+        //user:
+        const userReplay = user.comments.find((comment)=>{
+            return comment._id == String(replay.commentId)
+        }).replays.find((r)=>{
+            return r._id == String(replay._id)
+        });
+        userReplay.body = req.body.replayBody;
+        //save user:
+        await user.save();
+
+        //comment: 
+        const commentReplay = comment.replays.find((r)=>{
+            return r._id == String(replay._id)
+        });
+        commentReplay.body = req.body.replayBody;
+        //save comment
+        await comment.save();
+
+        //replay.
+        replay.body = req.body.replayBody;
+        await replay.save();
+
+        return res.status(200).json({
+            _id: replay._id,
+            post: post,
+            comment: comment
+        });
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+});
 
 module.exports = router;
