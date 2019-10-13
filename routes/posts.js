@@ -243,6 +243,7 @@ router.post('/replay', tokenValidate, async(req, res)=>{
         //save the replay to comment replays array:
         const commentReplays = await Comment.findById(replay.commentId);
         commentReplays.replays.push(replay);
+        commentReplays.replaysCount++;
         await commentReplays.save();
 
         //send the res:
