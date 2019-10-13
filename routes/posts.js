@@ -680,7 +680,6 @@ router.patch('/comment', tokenValidate, async(req, res)=>{
         return res.status(400).json({error: 'add the comment id in the request'});
     }
     try {
-        console.log(req.body.commentId + ' comment id before update');
         //check if the author or user id admin:
         var user = await User.findById(req.user.id);
         const comment = await Comment.findById(req.body.commentId);
@@ -696,17 +695,14 @@ router.patch('/comment', tokenValidate, async(req, res)=>{
         //update the comment in the user comments doc
         //find the comment in user post :
         var userComment = user.comments.find((c)=>{
-            console.log(c._id+'\n'+comment._id+'\n')
             return c._id == req.body.commentId
         });
-        console.log(userComment);
         var postComment = post.comments.find((c)=>{
             return c._id == req.body.commentId
         });
         //update the comment in user and post
         userComment.body = comment.body;
         postComment.body = comment.body;
-        console.log(postComment.body);
         //save the post and user:
         await user.save();
         await post.save();
