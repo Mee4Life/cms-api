@@ -390,7 +390,7 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
         });
         comment.replays = commentReplays;
         comment.save();
-        
+
         //remove the replay form the replays array:
         await replay.remove();
         
@@ -754,7 +754,7 @@ router.patch('/replay', tokenValidate, async(req, res)=>{
         }).replays.find((r)=>{
             return r._id == String(replay._id)
         });
-        postReplay.body == req.body.replayBody;
+        postReplay.body = req.body.replayBody;
         //save post 
         await post.save();
 
