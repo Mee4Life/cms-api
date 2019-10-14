@@ -229,22 +229,23 @@ router.post('/replay', tokenValidate, async(req, res)=>{
         comment.replaysCount++;
         await post.save();
 
+        //save the replay to comment replays array:
+        const commentReplays = await Comment.findById(replay.commentId);
+        commentReplays.replays.push(replay);
+        commentReplays.replaysCount++;
+        await commentReplays.save();
+
         //save replay to user comments replays array:
         // get user comment by comment id :
-        userComment = commenter.comments.find(function(comment){
+        const commentAuthor  = await User.findById(commentReplays.authorInfo.id);
+        userComment = commentAuthor.comments.find(function(comment){
             return comment._id == replay.commentId
         });
         //push replay to the post comment replays array:
         userComment.replays.push(replay);
         //increase the user comment replays counter:
         userComment.replaysCount++;
-        await commenter.save();
-
-        //save the replay to comment replays array:
-        const commentReplays = await Comment.findById(replay.commentId);
-        commentReplays.replays.push(replay);
-        commentReplays.replaysCount++;
-        await commentReplays.save();
+        await commentAuthor.save();
 
         //send the res:
         return res.status(200).json({_id: replay._id, comment: comment});
@@ -303,6 +304,7 @@ router.delete('/comment', tokenValidate, async(req, res)=>{
         //check if the current user is the author or admin:
         const comment = await Comment.findById(commentId);
         const user = await User.findById(req.user.id);
+        const author = await User.findById(comment.authorInfo.id);
         if(comment.authorInfo.id != req.user.id && user.admin != 1){
             return res.status(400).json({error: 'just the author/admin can delete the comment'})
         }
@@ -325,17 +327,17 @@ router.delete('/comment', tokenValidate, async(req, res)=>{
         post.commentsCount--;
         //save the post after edit
         await post.save();
-        //remove the comment from the user comments array:
-        //create new user comments array with out the comment we need to delete 
-        const userComments = user.comments.filter((comment)=>{
+        //remove the comment from the author comments array:
+        //create new author comments array with out the comment we need to delete 
+        const authorComments = author.comments.filter((comment)=>{
             return comment._id != commentId
         });
         //save the new comment array
-        user.comments = userComments;
+        author.comments = authorComments;
         //decrease the comments count after delete
-        user.commentsCount--;
-        //save the user after edit
-        await user.save();
+        author.commentsCount--;
+        //save the author after edit
+        await author.save();
         
         return res.status(200).json({_id: commentId, commentsCount: post.commentsCount, postId: post._id, comments:post.comments});
     } catch (error) {
@@ -351,8 +353,14 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
     }
 
     try {
+        //check if the current user is the author or admin:
         const replay = await Replay.findById(req.query.replayId);
-
+        const comment = await Comment.findById(replay.commentId);
+        const user = await User.findById(req.user.id);
+        const author = await User.findById(comment.authorInfo.id);
+        if(replay.authorInfo.id != req.user.id && user.admin != 1){
+            return res.status(400).json({error: 'just the author/admin can delete the comment'})
+        }
         const post = await Post.findById(replay.postId);
         const postComment = post.comments.find((comment)=>{
             return comment._id == replay.commentId+'';
@@ -368,23 +376,21 @@ router.delete('/replay', tokenValidate, async(req, res)=>{
         //save the post after edit:
         await post.save();
 
-        //remove the replay from the user comment replays array:
-        const user = await User.findById(req.user.id);
-        const userComment = user.comments.find((comment)=>{
+        //remove the replay from the author comment replays array:
+        const authorComment = author.comments.find((comment)=>{
             return comment._id == replay.commentId;
         });
         //filter the comment replays array from the replay:
-        const userReplays = userComment.replays.filter((replay)=>{
+        const authorReplays = authorComment.replays.filter((replay)=>{
             return replay._id != req.query.replayId;
         });
-        userComment.replays = userReplays;
+        authorComment.replays = authorReplays;
         //decrease the replays count:
-        userComment.replaysCount--;
-        //save the user after edit:
-        await user.save();
+        authorComment.replaysCount--;
+        //save the author after edit:
+        await author.save();
 
         //remove replay from the comments doc:
-        const  comment = await Comment.findById(replay.commentId);
         const commentReplays = comment.replays.filter((r)=>{
             return r._id != String(replay._id)
         });
@@ -460,11 +466,10 @@ router.post('/comment/like', tokenValidate, async(req,res)=>{
     }
 
     try {
-        //TODO GET THE POST DIRECT FROM THE COMMENT NO NEED TO ADD THE POST TO THE REQUEST
-        //get the comment, post, user obj:
+        //get the comment, post, author obj:
         const comment = await Comment.findById(req.body.commentId);
-        const post = await Post.findById(req.body.postId);
-        const user = await User.findById(req.user.id);
+        const post = await Post.findById(comment.postId);
+        const author = await User.findById(comment.authorInfo.id);
 
         //check if the user already liked the comment:
         var userInfoCard;
@@ -501,17 +506,17 @@ router.post('/comment/like', tokenValidate, async(req,res)=>{
             /** ----------------------------------------- */
             //decrease the likes count in the user comments doc
             /** ----------------------------------------- */
-            const userComment = user.comments.find((comment)=>{
+            const authorComment = author.comments.find((comment)=>{
                 return comment._id == req.body.commentId;
             });
-            userComment.likesCount--;
+            authorComment.likesCount--;
             //remove the user from the users like array:
-            const userCommentLikers = userComment.likers.filter((userInfoCard)=>{
+            const authorCommentLikers = authorComment.likers.filter((userInfoCard)=>{
                 return userInfoCard.id != req.user.id;
             });
-            userComment.likers = userCommentLikers;
-            //save the user after toggle:
-            await user.save();
+            authorComment.likers = authorCommentLikers;
+            //save the author after toggle:
+            await author.save();
             action = 0; // dislike
         }else{
             /** ----------------------------------------- */
@@ -536,16 +541,16 @@ router.post('/comment/like', tokenValidate, async(req,res)=>{
             //save the post after toggle:
             await post.save();
             /** ----------------------------------------- */
-            //increase the likes count in the user comments doc
+            //increase the likes count in the author comments doc
             /** ----------------------------------------- */
-            const userComment = user.comments.find((comment)=>{
+            const authorComment = author.comments.find((comment)=>{
                 return comment._id == req.body.commentId;
             });
-            userComment.likesCount++;
+            authorComment.likesCount++;
             //add the user from the users like array:
-            userComment.likers.push(userInfoCard);
-            //save the user after toggle:
-            await user.save();
+            authorComment.likers.push(userInfoCard);
+            //save the author after toggle:
+            await author.save();
             action = 1; // like
         }
         return res.status(200).json({commentId: comment._id, likesCount: comment.likesCount, action: action})
@@ -564,8 +569,9 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
     try {
         //TODO GET THE POST AND THE COMMENT DIRECT FROM THE REPLAY NO NEED TO ADD IT TO THE REQUEST
         //get the post, user, comment replay obj:
+        const replay = await Replay.findById(req.body.replayId);
         const post = await Post.findById(req.body.postId);
-        const user = await User.findById(req.user.id);
+        const author = await User.findById(replay.authorInfo.id);
         const comment = await Comment.findById(req.body.commentId);
         //post replay:
         const postReplay = post.comments.find((comment)=>{
@@ -577,14 +583,12 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
         const commentReplay = comment.replays.find((replay)=>{
             return replay._id == req.body.replayId;
         });
-        //user replay:
-        const userReplay = user.comments.find((comment)=>{
+        //author replay:
+        const authorReplay = author.comments.find((comment)=>{
             return comment._id == req.body.commentId
         }).replays.find((replay)=>{
             return replay._id == req.body.replayId;
         });
-        // replay:
-        const replay = await Replay.findById(req.body.replayId);
 
         //check if the user already liked the replay:
         var action ;
@@ -594,7 +598,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
         if(userInfoCard){
             //decrease the likes count:
             postReplay.likesCount--;
-            userReplay.likesCount--;
+            authorReplay.likesCount--;
             commentReplay.likesCount--;
             replay.likesCount--;
             //remove the user card:
@@ -602,7 +606,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
                 return userInfoCard.id != req.user.id;
             });
             postReplay.likers = replayLikers;
-            userReplay.likers = replayLikers;
+            authorReplay.likers = replayLikers;
             commentReplay.likers = replayLikers;
             replay.likers = replayLikers;
             action = 0; // dislike
@@ -610,14 +614,14 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
         }else{
             //increase the  replay likes count
             postReplay.likesCount++;
-            userReplay.likesCount++;
+            authorReplay.likesCount++;
             commentReplay.likesCount++;
             replay.likesCount++;
             // add the user to the likers:
             //get user card
             const newUserInfoCard = await UserInfo.findOne({id: req.user.id});
             postReplay.likers.push(newUserInfoCard);
-            userReplay.likers.push(newUserInfoCard);
+            authorReplay.likers.push(newUserInfoCard);
             commentReplay.likers.push(newUserInfoCard);
             replay.likers.push(newUserInfoCard);
             action = 1; // like
@@ -626,7 +630,7 @@ router.post('/replay/like', tokenValidate, async(req, res)=>{
         
         await post.save();
         await comment.save();
-        await user.save();
+        await authorReplay.save();
         await replay.save();
 
         return res.json({_id: replay._id, likesCount: replay.likesCount, action: action});
@@ -737,7 +741,7 @@ router.patch('/replay', tokenValidate, async(req, res)=>{
 
     try {
         //extract the data:
-        const user = await User.findById(req.user.id);
+        var user = await User.findById(req.user.id);
         const replay = await Replay.findById(req.body.replayId);
         const post = await Post.findById(replay.postId);
         const comment = await Comment.findById(replay.commentId);
@@ -746,6 +750,8 @@ router.patch('/replay', tokenValidate, async(req, res)=>{
         if(replay.authorInfo.id != req.user.id && user.admin != 1){
             return res.status(400).json({error: 'only the other and the admin can update the replay'});
         }
+
+        user = await User.findById(replay.authorInfo.id);
 
         //update replay:
 
