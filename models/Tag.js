@@ -7,7 +7,6 @@ const TagSchema = new mongoose.Schema({
     postsCount:{ type: Number, default: 0 }
 });
 
-TagSchema.index({'$**': 'text'});
 TagSchema.plugin(mongooseTime);
 const Tag = mongoose.model('Tag', TagSchema);
 

@@ -11,12 +11,12 @@ const wordSchema = new Joi.object().keys({
 });
 
 //search by word;
-router.get('', async(req, res)=>{
+router.get('', async (req, res) => {
     const word = req.query.content;
     //data validate:
-    const {error} = Joi.validate(req.query, wordSchema);
-    if(error){
-        return res.status(400).json({error: error.details[0].message});
+    const { error } = Joi.validate(req.query, wordSchema);
+    if (error) {
+        return res.status(400).json({ error: error.details[0].message });
     }
 
     //search in tags collection:
@@ -24,13 +24,31 @@ router.get('', async(req, res)=>{
     var categories;
     var posts;
     try {
-        tags = await Tag.find({ $text: { $search: word } }).select('_id name postsCount');
-        categories = await Category.find({ $text: { $search: word } }).select('_id title des');
-        posts = await Post.find({ $text: { $search: word } }).select('_id title des');
-
-        return res.status(200).json({tags: tags, posts: posts, categories: categories});
+        const reg = new RegExp(word, "g");
+        tags = await Tag.find({
+            $or: [
+                { name: { $regex: reg } }
+            ]
+        });
+        categories = await Category.find({
+            $or: [
+                { title: { $regex: reg } },
+                { des: { $regex: reg } }
+            ]
+        });
+        posts = await Post.find({
+            $or: [
+                { title: { $regex: reg } },
+                { body: { $regex: reg } },
+                { des: { $regex: reg } }
+            ]
+        })
+        const data = { tags: tags, posts: posts, categories: categories };
+        console.log(posts);
+        return res.status(200).json(data);
     } catch (error) {
-        return res.status(400).json({error: error.message});
+        console.log(error);
+        return res.status(400).json({ error: error.message });
     }
 
 });

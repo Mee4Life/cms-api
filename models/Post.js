@@ -49,7 +49,6 @@ const PostSchema = new mongoose.Schema({
 
 });
 
-PostSchema.index({'$**': 'text'});
 PostSchema.plugin(mongooseTime);
 
 const Post = mongoose.model('Post', PostSchema);

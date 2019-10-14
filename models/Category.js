@@ -11,7 +11,6 @@ const categorySchema = new mongoose.Schema({
 
 });
 
-categorySchema.index({'$**': 'text'});
 categorySchema.plugin(mongooseTimeStamp);
 
 const Category = mongoose.model('Category', categorySchema);
