@@ -12,6 +12,24 @@ insertCategoryVal = new Joi.object().keys({
     parentId: Joi.string().alphanum().min(4).allow('')
 });
 
+
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }
+
+const start = async (arr) => {
+    await asyncForEach((arr), async (cat) => {
+        cat.nestedCategories = await Category.find({parentId: cat._id})
+        await cat.save()
+        if(cat.parentId){
+            const cats = await Category.find({_id: cat.parentId})
+            await start(cats)
+        }
+    });
+}
+
 //get all categories
 router.get('/', async (req, res) => {
     try {
@@ -35,7 +53,7 @@ router.get('/category', async(req, res)=>{
 //get root categories :
 router.get('/home', async(req, res)=>{
     try {
-        const categories = await Category.find({parentId: 'root'});
+        const categories = await Category.find({parentId: null});
         return res.status(200).json(categories);
     } catch (error) {
         return res.status(400).json({ error: error.message });
@@ -95,6 +113,8 @@ router.post('/add', tokenValidate, async (req, res) => {
 
     try {
         const savedCat = await category.save();
+        const categories = await Category.find();
+        await start(categories);
         return res.status(201).json({ id: savedCat._id });
     } catch (error) {
         return res.status(400).json({ error: error });

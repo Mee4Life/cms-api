@@ -1,13 +1,24 @@
 const mongoose = require('mongoose');
 const mongooseTimeStamp = require('mongoose-timestamp');
 
+const nestedCategoriesSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    des: { type: String, required: true },
+    nestedCategories: [],
+    postsCount: { type: Number, required: false },
+    imgUrl: { type: String, required: false },
+    parentId: { type: String, required: true},
+});
+nestedCategoriesSchema.plugin(mongooseTimeStamp);
+const nestedCategories = mongoose.model('nestedCategories', nestedCategoriesSchema);
+
 const categorySchema = new mongoose.Schema({
     title: { type: String, required: true },
     des: { type: String, required: true },
-    nestedCategories: { type: Array, required: false },
+    nestedCategories: [],
     postsCount: { type: Number, required: false },
     imgUrl: { type: String, required: false },
-    parentId: { type: String, required: false, default: 'root'},
+    parentId: { type: String, required: false},
 
 });
 
