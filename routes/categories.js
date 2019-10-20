@@ -94,7 +94,6 @@ router.post('/add', tokenValidate, async (req, res) => {
         category = new Category({
             title: req.body.title,
             des: req.body.des,
-            nestedCategories: {},
             postsCount: 0,
             imgUrl: '/uploads/categoriesImg/' + fileName,
             parentId: req.body.parentId,
@@ -104,7 +103,6 @@ router.post('/add', tokenValidate, async (req, res) => {
         category = new Category({
             title: req.body.title,
             des: req.body.des,
-            nestedCategories: {},
             postsCount: 0,
             parentId: req.body.parentId,
 
@@ -113,11 +111,19 @@ router.post('/add', tokenValidate, async (req, res) => {
 
     try {
         const savedCat = await category.save();
-        const categories = await Category.find();
-        await start(categories);
+        const reg = new RegExp(savedCat.parentId+'', "g");
+        const categories = await Category.find({
+            $or: [
+                { _id: savedCat.parentId },
+                { nestedCategories: { $regex: reg } }
+            ]
+        });
+        if(categories){
+            await start(categories);
+        }
         return res.status(201).json({ id: savedCat._id });
     } catch (error) {
-        return res.status(400).json({ error: error });
+        return res.status(400).json({ error: error.message });
     }
 });
 
