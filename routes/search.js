@@ -53,4 +53,31 @@ router.get('', async (req, res) => {
 
 });
 
+//tags by char
+router.get('/tags', async (req, res) => {
+    const query = req.query.chars;
+
+    if(!query || query.length < 1){
+        return res.status(400).json({error: 'include chars in request'});
+    }
+
+    const chars = query.charAt(0).toUpperCase() + query.substring(1);
+    try {
+        //first letter capital
+        const reg = new RegExp(chars, 'g');
+        //original first letter case
+        const reg2 = new RegExp(query, 'g');
+        //find regex:
+        const tags = await Tag.find({
+            $or:[
+                {name: {$regex: reg}},
+                {name: {$regex: reg2}}
+            ]
+        });
+        return res.status(200).json(tags);
+    } catch (error) {
+        return res.status(400).json({error: error.message});
+    }
+})
+
 module.exports = router;
