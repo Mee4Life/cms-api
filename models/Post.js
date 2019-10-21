@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const mongooseTime = require('mongoose-timestamp');
 const UserInfoSchema = require('./User').userInfo.schema;
+const Tag = require('./Tag').TagSchema;
 
 //ReplaySchema :
 const ReplaySchema = new mongoose.Schema({
@@ -41,7 +42,7 @@ const PostSchema = new mongoose.Schema({
     likesCount: { type: Number, required: false },
     commentsCount: { type: Number, required: false },
     comments: [CommentSchema],
-    tags: { type: Array, required: false },
+    tags: [Tag],
     imgUrl: { type: String, required: false },
     showInActivity:{ type: Number, default: 1 },
     authorInfo: {type: UserInfoSchema, required:true},

@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const Tag = require('../models/Tag');
+const Tag = require('../models/Tag').Tag;
 const Joi = require('@hapi/joi');
 const tokenValidate = require('../token_validate');
 

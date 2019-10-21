@@ -8,6 +8,7 @@ const Comment = require('../models/Post').comment;
 const Replay = require('../models/Post').replay;
 const User = require('../models/User').user;
 const UserInfo = require('../models/User').userInfo;
+const Tag = require('../models/Tag').Tag;
 
 //data validate :
 const valPost = new Joi.object().keys({
@@ -16,8 +17,8 @@ const valPost = new Joi.object().keys({
     des: Joi.string().required(),
     body: Joi.string().required(),
     showInActivity:Joi.number().default(1),
-    comments:Joi.array()
-
+    comments:Joi.array(),
+    tags: Joi.string()
 });
 //TODO add the comment and replay validate
 
@@ -117,7 +118,7 @@ router.post('/add', tokenValidate, async (req, res) => {
             likesCount: 0,
             commentsCount: 0,
             comments: req.body.comments,
-            tags: undefined,
+            tags: [],
             imgUrl: '/uploads/postsImg/' + fileName,
             showInActivity: req.body.showInActivity,
             authorInfo: userInfoCard,
@@ -132,11 +133,23 @@ router.post('/add', tokenValidate, async (req, res) => {
             body: req.body.body,
             likesCount: 0,
             commentsCount: 0,
-            tags: undefined,
+            tags: [],
             showInActivity: req.body.showInActivity,
             authorInfo: userInfoCard,
 
         });
+    }
+
+    //handle post tags:
+    //check if the post has tags:
+    if(req.body.tags){
+        //tags come string like: 'test, test1, another test'
+        var TagsNames = req.body.tags.split(', ');
+        TagsNames = TagsNames.filter((t)=>{
+            return t.length > 0
+        })
+        //loop throw each tag
+        post = await handlePostTags(TagsNames, post);
     }
 
     try {
@@ -148,6 +161,39 @@ router.post('/add', tokenValidate, async (req, res) => {
     }
 
 });
+
+//async for each:
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+}
+
+//handel post tags:
+const handlePostTags = async (TagsNames, post) => {
+    await asyncForEach((TagsNames), async (t) => {
+        //make the first char capital letter
+        t = t.charAt(0).toUpperCase()+t.substring(1);
+        //check if old tag:
+        const tag = await Tag.findOne({name: t});
+        if(tag){
+            tag.postsId.push(post._id);
+            tag.postsCount++;
+            post.tags.push(tag);
+            await tag.save();
+        }else{
+            //create tag in tags collection:
+            const newTag = new Tag({
+                name: t,
+                postsCount: 1,
+                postsId:[post._id]
+            });
+            post.tags.push(newTag);
+            await newTag.save();
+        }
+    });
+    return post;
+}
 
 //add comment:
 router.post('/comment', tokenValidate, async(req, res)=>{

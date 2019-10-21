@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const Joi = require('@hapi/joi');
 
-const Tag = require('../models/Tag');
+const Tag = require('../models/Tag').Tag;
 const Post = require('../models/Post').post;
 const Category = require('../models/Category');
 
